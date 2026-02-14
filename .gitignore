@@ -137,3 +137,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# wwebjs cache files
+src/.wwebjs_cache
+src/.wwebjs_auth

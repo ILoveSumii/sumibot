@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageTypes } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const client = new Client({
@@ -15,8 +15,15 @@ client.on('qr', (qr) => {
 
 client.on('message', async message => {
     await sleep(1000);
-    client.sendMessage(message.from, message.body);
-})
+    if(message.type === MessageTypes.IMAGE) {
+        const media = await message.downloadMedia();
+        await client.sendMessage(message.from, media,
+            { sendMediaAsSticker: true }
+        );
+    } else {
+        client.sendMessage(message.from, message.body);
+    }
+});
 
 async function sleep(timeInMilliseconds){
     return new Promise(resolve => setTimeout(resolve, timeInMilliseconds));

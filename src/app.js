@@ -16,6 +16,7 @@ client.on('qr', (qr) => {
 client.on('message', async message => {
     await sleep(1000);
     if(message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO){
+        await sleep(2000);
         const media = await message.downloadMedia();
         await client.sendMessage(message.from, media,
             { sendMediaAsSticker: true }

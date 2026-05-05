@@ -67,7 +67,8 @@ client.on('message', async message => {
                 client,
                 message,
                 args,
-                MessageTypes
+                MessageTypes,
+                commands
             });
         } catch (err) {
             console.error(err);

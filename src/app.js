@@ -51,7 +51,7 @@ function parseMessage(message) {
 }
 
 client.on('message', async message => {
-    await sleep(1000);
+    await sleep(1500);
     const parsed = parseMessage(message.body);
 
     if (parsed) {

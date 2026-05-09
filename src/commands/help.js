@@ -20,7 +20,7 @@ module.exports = {
             }
 
             return message.reply(
-`*Comando:* .sumi ${cmd.name}
+                `*Comando:* .sumi ${cmd.name}
 
 *Descripción:*
 ${cmd.longDescription || cmd.description}

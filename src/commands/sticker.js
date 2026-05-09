@@ -5,7 +5,6 @@ module.exports = {
 
     async execute({ client, message, MessageTypes }) {
 
-        await sleep(2000);
         const media = await message.downloadMedia();
 
         await client.sendMessage(message.from, media, {

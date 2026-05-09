@@ -52,6 +52,10 @@ function parseMessage(message) {
 
 client.on('message', async message => {
     await sleep(1500);
+
+    const chat = await message.getChat();
+    if (chat.isGroup && !message.body.startsWith(PREFIX)) return;
+
     const parsed = parseMessage(message.body);
 
     if (parsed) {
@@ -78,14 +82,12 @@ client.on('message', async message => {
         return;
     }
 
-    if (!message.getChat().isGroup) {
-        if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
-                await sleep(2000);
-                const media = await message.downloadMedia();
-                await client.sendMessage(message.from, media, {
-                    sendMediaAsSticker: true
-                });
-        }
+    if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
+        await sleep(2000);
+        const media = await message.downloadMedia();
+        await client.sendMessage(message.from, media, {
+            sendMediaAsSticker: true
+        });
     }
 
 });

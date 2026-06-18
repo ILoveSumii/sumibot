@@ -63,6 +63,7 @@ client.on('message', async message => {
         const cmd = commands.get(command);
 
         if (!cmd) {
+            message.reply("Comando desconocido. Usa .sumi help para ver los comandos disponibles.");
             return console.warn("Unknown command:", command);
         }
 
@@ -76,7 +77,7 @@ client.on('message', async message => {
             });
         } catch (err) {
             console.error(err);
-            message.reply("Uy, tuve un error al ejecutar eso.");
+            message.reply("Error al ejecutar el comando D:");
         }
 
         return;

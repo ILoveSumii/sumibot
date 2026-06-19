@@ -16,7 +16,7 @@ module.exports = {
             const cmd = commands.get(query);
 
             if (!cmd) {
-                return message.reply("No such command: " + query);
+                return message.reply("No existe tal comando: " + query);
             }
 
             return message.reply(

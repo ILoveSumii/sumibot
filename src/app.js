@@ -53,6 +53,8 @@ function parseMessage(message) {
 client.on('message', async message => {
     await sleep(1500);
 
+    contact = await message.getContact();
+
     const chat = await message.getChat();
     if (chat.isGroup && !message.body.startsWith(PREFIX)) return;
 
@@ -73,7 +75,8 @@ client.on('message', async message => {
                 message,
                 args,
                 MessageTypes,
-                commands
+                commands,
+                contact
             });
         } catch (err) {
             console.error(err);
@@ -82,6 +85,8 @@ client.on('message', async message => {
 
         return;
     }
+
+    
 
     if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
         await sleep(2000);

@@ -3,7 +3,7 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');
 
-const PREFIX = ".sumi";
+const PREFIXES = [".sumi", ".Sumi", ".SUMI"];
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -40,9 +40,9 @@ client.on('qr', (qr) => {
 });
 
 function parseMessage(message) {
-    if (!message.startsWith(PREFIX)) return null;
-
     const parts = message.trim().split(/\s+/);
+
+    if (!PREFIXES.includes(parts[0])) return null;
 
     return {
         command: parts[1]?.toLowerCase(),
@@ -56,7 +56,7 @@ client.on('message', async message => {
     contact = await message.getContact();
 
     const chat = await message.getChat();
-    if (chat.isGroup && !message.body.startsWith(PREFIX)) return;
+    if (chat.isGroup && !PREFIXES.includes(message.body.split(/\s+/)[0])) return;
 
     const parsed = parseMessage(message.body);
 
@@ -85,8 +85,6 @@ client.on('message', async message => {
 
         return;
     }
-
-    
 
     if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
         await sleep(2000);

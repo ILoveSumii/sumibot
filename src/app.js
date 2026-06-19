@@ -86,6 +86,7 @@ client.on('message', async message => {
     if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
         await sleep(2000);
         const media = await message.downloadMedia();
+        if(!media) return;
         await client.sendMessage(message.from, media, {
             sendMediaAsSticker: true
         });

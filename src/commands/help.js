@@ -1,5 +1,3 @@
-const { longDescription } = require("./sticker");
-
 module.exports = {
     name: "help",
     description: "Muestra la lista de comandos o detalles de uno",

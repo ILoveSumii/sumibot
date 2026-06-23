@@ -32,7 +32,9 @@ subcommands.set('help', async ({ message }) => {
     let response = `*Comandos de economía:*\n\n`;
 
     subcommandsList.forEach(cmd => {
+        if(cmd !== 'help'){
         response += `.sumi economy ${cmd}\n`;
+        }
     });
 
     message.reply(response);

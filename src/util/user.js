@@ -18,6 +18,12 @@ function userExists(contactIdUser) {
     return fs.existsSync(getUserPath(contactIdUser));
 }
 
+function userNameExists(contactUsername) {
+    return fs.readdirSync(USERDATA_DIR).some(file => {
+        return JSON.parse(fs.readFileSync(path.join(USERDATA_DIR, file), 'utf-8')).username === contactUsername;
+    });
+}
+
 function getUser(contactIdUser) {
     if (!userExists(contactIdUser)) return null;
     const raw = fs.readFileSync(getUserPath(contactIdUser), 'utf-8');
@@ -29,11 +35,20 @@ function saveUser(contactIdUser, data) {
     fs.writeFileSync(getUserPath(contactIdUser), JSON.stringify(data, null, 2));
 }
 
-function createUser(contactIdUser) {
+function editUser(contactIdUser, newData) {
+    if (!userExists(contactIdUser)) return null;
+    const userData = getUser(contactIdUser);
+    const updatedData = { ...userData, ...newData };
+    saveUser(contactIdUser, updatedData);
+    return updatedData;
+}
+
+function createUser(contactIdUser, contactUsername) {
     if (userExists(contactIdUser)) return null;
 
     const data = {
-        user: contactIdUser,
+        id: contactIdUser,
+        username: contactUsername,
         sumicoins: 100
     };
 
@@ -41,4 +56,4 @@ function createUser(contactIdUser) {
     return data;
 }
 
-module.exports = { userExists, getUser, saveUser, createUser };
+module.exports = { userExists, getUser, saveUser, createUser, userNameExists, editUser };

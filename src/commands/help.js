@@ -1,11 +1,9 @@
-const { longDescription } = require("./sticker");
-
 module.exports = {
     name: "help",
     description: "Muestra la lista de comandos o detalles de uno",
     longDescription: `Muestra la lista de comandos disponibles y una descripción de ellos.
     
-    Argumentos: [comando] (opcional) : Si se especifica un comando, muestra una descripción detallada del comando y el uso del mismo, así como también sus alias.`,
+    Argumentos: [comando] (opcional) : Si se especifica un comando, muestra una descripción detallada.`,
     usage: ".sumi help [comando]",
     aliases: ["h"],
 
@@ -16,7 +14,7 @@ module.exports = {
             const cmd = commands.get(query);
 
             if (!cmd) {
-                return message.reply("No such command: " + query);
+                return message.reply("No existe tal comando: " + query);
             }
 
             return message.reply(
@@ -43,7 +41,7 @@ ${cmd.aliases ? "*Aliases:* " + cmd.aliases.join(", ") : ""}`
         let response = "*Lista de comandos:*\n\n";
 
         uniqueCommands.forEach(cmd => {
-            response += `• *.sumi ${cmd.name}* → ${cmd.description}\n`;
+            response += `*.sumi ${cmd.name}* → ${cmd.description}\n`;
         });
 
         response += "\nUsa *.sumi help [comando]* para más detalles";

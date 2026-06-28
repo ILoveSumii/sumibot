@@ -3,7 +3,7 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');
 
-const PREFIX = ".sumi";
+const PREFIXES = [".sumi", ".Sumi", ".SUMI"];
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -40,9 +40,9 @@ client.on('qr', (qr) => {
 });
 
 function parseMessage(message) {
-    if (!message.startsWith(PREFIX)) return null;
-
     const parts = message.trim().split(/\s+/);
+
+    if (!PREFIXES.includes(parts[0])) return null;
 
     return {
         command: parts[1]?.toLowerCase(),
@@ -53,8 +53,10 @@ function parseMessage(message) {
 client.on('message', async message => {
     await sleep(1500);
 
+    contact = await message.getContact();
+
     const chat = await message.getChat();
-    if (chat.isGroup && !message.body.startsWith(PREFIX)) return;
+    if (chat.isGroup && !PREFIXES.includes(message.body.split(/\s+/)[0])) return;
 
     const parsed = parseMessage(message.body);
 
@@ -63,6 +65,7 @@ client.on('message', async message => {
         const cmd = commands.get(command);
 
         if (!cmd) {
+            message.reply("Comando desconocido. Usa .sumi help para ver los comandos disponibles.");
             return console.warn("Unknown command:", command);
         }
 
@@ -72,11 +75,12 @@ client.on('message', async message => {
                 message,
                 args,
                 MessageTypes,
-                commands
+                commands,
+                contact
             });
         } catch (err) {
             console.error(err);
-            message.reply("Uy, tuve un error al ejecutar eso.");
+            message.reply("Error al ejecutar el comando D:");
         }
 
         return;
@@ -85,6 +89,7 @@ client.on('message', async message => {
     if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
         await sleep(2000);
         const media = await message.downloadMedia();
+        if(!media) return;
         await client.sendMessage(message.from, media, {
             sendMediaAsSticker: true
         });

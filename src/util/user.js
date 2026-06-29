@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const USERDATA_DIR = path.join(__dirname, '..', 'userdata');
+const USERDATA_DIR = path.join(__dirname, '..', 'datafiles', 'userdata');
+
+ensureDir();
 
 function ensureDir() {
     if (!fs.existsSync(USERDATA_DIR)) {

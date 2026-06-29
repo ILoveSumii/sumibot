@@ -12,7 +12,7 @@ function ensureDir() {
 }
 
 function getUserPath(contactIdUser) {
-    filename = `${contactIdUser}.json`;
+    const filename = `${contactIdUser}.json`;
     return path.join(USERDATA_DIR, filename);
 }
 

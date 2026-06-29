@@ -13,12 +13,13 @@ function onVote(fn){
 function createPrediction(prize, timelimitMinutes, predictionMessage){
 
     let predictionTimeLimitInMs = timelimitMinutes * 60 * 1000;
+    let instantNow = Date.now();
 
     const prediccion = {
         predictionMessage: predictionMessage,
         sumicoinsPrize: prize,
-        createdAt: Date.now(),
-        expiration: Date.now() + predictionTimeLimitInMs,
+        createdAt: instantNow,
+        expiration: instantNow + predictionTimeLimitInMs,
         positiveVotes: new Set(),
         negativeVotes: new Set(),
         closed: false,

@@ -19,8 +19,8 @@ function createPrediction(prize, timelimitMinutes, predictionMessage){
         sumicoinsPrize: prize,
         createdAt: Date.now(),
         expiration: Date.now() + predictionTimeLimitInMs,
-        positiveVotes: [],
-        negativeVotes: [],
+        positiveVotes: new Set(),
+        negativeVotes: new Set(),
         closed: false,
         resolved: false
     }
@@ -52,12 +52,12 @@ function vote(pred, userNumber, optionVotedFor){
         return;
     }
 
-    if(optionVotedFor == '😢'){
-        pred.negativeVotes.push(userNumber);
-    } else if (optionVotedFor == '👍'){
-        pred.positiveVotes.push(userNumber);
-    } else {
-        return;
+    if (optionVotedFor === '👍') {
+        pred.negativeVotes.delete(userNumber);
+        pred.positiveVotes.add(userNumber);
+    } else if (optionVotedFor === '😢') {
+        pred.positiveVotes.delete(userNumber);
+        pred.negativeVotes.add(userNumber);
     }
 }
 

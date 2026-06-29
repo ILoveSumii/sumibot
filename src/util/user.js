@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const USERDATA_DIR = path.join(__dirname, '..', 'userdata');
+const USERDATA_DIR = path.join(__dirname, '..', 'datafiles', 'userdata');
+
+ensureDir();
 
 function ensureDir() {
     if (!fs.existsSync(USERDATA_DIR)) {
@@ -10,7 +12,7 @@ function ensureDir() {
 }
 
 function getUserPath(contactIdUser) {
-    filename = `${contactIdUser}.json`;
+    const filename = `${contactIdUser}.json`;
     return path.join(USERDATA_DIR, filename);
 }
 

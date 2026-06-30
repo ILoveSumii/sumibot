@@ -1,4 +1,6 @@
 const { Client, LocalAuth, MessageTypes } = require('whatsapp-web.js');
+const { predis, getPredi, vote, onClose } = require('./util/predictions');
+const { getUser, editUser } = require('./util/user')
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');
@@ -95,6 +97,29 @@ client.on('message', async message => {
         });
     }
 
+});
+
+client.on('message_reaction', async reaction => {
+
+    let predict = getPredi(reaction.msgId.id);
+
+    if(!predict || predict.closed){
+        return;
+    }
+
+    let reactionEmoji = reaction.reaction;
+    let userThatReacted = (await client.getContactById(reaction.senderId)).id.user;
+
+    if(!getUser(userThatReacted)){
+        return;
+    }
+
+    vote(predict, userThatReacted, reactionEmoji);
+
+});
+
+onClose((predict) => {
+    predict.predictionMessage.reply(`¡Predicción cerrada! | ${predict.positiveVotes.length} 👍 | ${predict.negativeVotes.length} 😢`);
 });
 
 function sleep(ms) {

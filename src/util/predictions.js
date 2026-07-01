@@ -53,7 +53,16 @@ function vote(pred, userNumber, optionVotedFor){
         return;
     }
 
-    if (optionVotedFor === '👍') {
+    const thumbsUp = new Set([
+        '👍',
+        '👍🏻',
+        '👍🏼',
+        '👍🏽',
+        '👍🏾',
+        '👍🏿',
+    ]);
+
+    if (thumbsUp.has(optionVotedFor)) {
         pred.negativeVotes.delete(userNumber);
         pred.positiveVotes.add(userNumber);
     } else if (optionVotedFor === '😢') {

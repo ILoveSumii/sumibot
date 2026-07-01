@@ -119,7 +119,7 @@ client.on('message_reaction', async reaction => {
 });
 
 onClose((predict) => {
-    predict.predictionMessage.reply(`¡Predicción cerrada! | ${predict.positiveVotes.length} 👍 | ${predict.negativeVotes.length} 😢`);
+    predict.predictionMessage.reply(`¡Predicción cerrada! | ${predict.positiveVotes.size} 👍 | ${predict.negativeVotes.size} 😢`);
 });
 
 function sleep(ms) {

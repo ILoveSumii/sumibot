@@ -32,7 +32,16 @@ module.exports = {
 
             let predictionResolvedMessage = ``;
 
-            if('👍👍🏻👍🏼👍🏽👍🏾👍🏿'.includes(args[0])){
+            const thumbsUp = new Set([
+              '👍',
+              '👍🏻',
+              '👍🏼',
+              '👍🏽',
+              '👍🏾',
+              '👍🏿',
+            ]);
+
+            if(thumbsUp.has(args[0])){
                 winners = predictToResolve.positiveVotes
                 for(const winner of winners){
                     const userWinner = await getUser(winner);
@@ -42,7 +51,7 @@ module.exports = {
                 }
 
                 predictionResolvedMessage = `Ganó el sí (👍) | *+${predictToResolve.sumicoinsPrize}🌸 para:*\n`;
-                if(winners.length <= 0){
+                if(winners.size <= 0){
                     predictionResolvedMessage += `¡Nadie! u.u`;
                 } else {
                     winnersNames.forEach((name) => {
@@ -62,7 +71,7 @@ module.exports = {
                 }
 
                 predictionResolvedMessage = `Ganó el no (😢) | *+${predictToResolve.sumicoinsPrize}🌸 para:*\n`;
-                if(winners.length <= 0){
+                if(winners.size <= 0){
                     predictionResolvedMessage += `¡Nadie! u.u`;
                 } else {
                     winnersNames.forEach((name) => {

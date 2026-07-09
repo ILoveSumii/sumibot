@@ -51,7 +51,8 @@ function createUser(contactIdUser, contactUsername) {
     const data = {
         id: contactIdUser,
         username: contactUsername,
-        sumicoins: 100
+        sumicoins: 100,
+        role: 'USER'
     };
 
     saveUser(contactIdUser, data);

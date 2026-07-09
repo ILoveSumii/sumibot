@@ -11,7 +11,7 @@ module.exports = {
 
         let predAuthor = await getUser(contact.id.user);
 
-        if(predAuthor.username !== 'ILoveSumi'){
+        if(predAuthor.role !== 'ADMIN'){
             return;
         }
 

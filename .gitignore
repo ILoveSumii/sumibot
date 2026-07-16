@@ -139,8 +139,8 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # wwebjs cache files
-src/.wwebjs_cache
-src/.wwebjs_auth
+.wwebjs_cache
+.wwebjs_auth
 
 # bot userdata files
 src/datafiles

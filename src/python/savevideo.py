@@ -3,23 +3,25 @@ import json
 import datetime
 import sys
 
-def save_video(url):
+def save_video(url, outputdirectory):
     ydl_opts = {
-        'outtmpl': f'../datafiles/temp/videos/%(title)s-{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.%(ext)s',
+        'outtmpl': f'../datafiles/temp/videos/{outputdirectory}.%(ext)s',
         'format': 'bestvideo+bestaudio/best',
+        'quiet': True,
         'merge_output_format': 'mp4',
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-        print(f"Video: {ydl_opts['outtmpl']} downloaded successfully.")
+        info = ydl.extract_info(url, download=True)
+        real_path = ydl.prepare_filename(info).replace('.webm', '.mp4').replace('.mkv', '.mp4')
+        print(json.dumps({ 'path': real_path }))
         sys.exit(0)
     
-if(len(sys.argv) < 2):
-    print("Uso: python savevideo.py <url> (--info)")
+if(len(sys.argv) < 3):
+    print("Uso: python savevideo.py <url> <outputdir> [--info]")
     sys.exit(1)
 
-if(len(sys.argv) == 3 and sys.argv[2] == "--info"):
+if(len(sys.argv) == 4 and sys.argv[3] == "--info"):
     url = sys.argv[1]
 
     if(url.endswith("/")):
@@ -32,18 +34,19 @@ if(len(sys.argv) == 3 and sys.argv[2] == "--info"):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         
+        info = ydl.extract_info(url, download=False)
         video_info = {
             'url': url,
-            'title': ydl.extract_info(url, download=False).get('title', None),
-            'description': ydl.extract_info(url, download=False).get('description', None),
-            'duration': ydl.extract_info(url, download=False).get('duration', None),
-            'view_count': ydl.extract_info(url, download=False).get('view_count', None),
-            'like_count': ydl.extract_info(url, download=False).get('like_count', None),
-            'upload_date': ydl.extract_info(url, download=False).get('upload_date', None),
+            'title': info.get('title'),
+            'description': info.get('description'),
+            'duration': info.get('duration'),
+            'view_count': info.get('view_count'),
+            'like_count': info.get('like_count'),
+            'upload_date': info.get('upload_date'),
         }
 
         print(json.dumps(video_info, indent=4))
         sys.exit(0)
 
-save_video(sys.argv[1])
+save_video(sys.argv[1], sys.argv[2])
 

@@ -1,46 +1,47 @@
-const fs = require('fs');
-const path = require('path');
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const USERDATA_DIR = path.join(__dirname, '..', 'datafiles', 'userdata');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const USERDATA_DIR = join(__dirname, '..', 'datafiles', 'userdata');
 
 ensureDir();
 
 function ensureDir() {
-    if (!fs.existsSync(USERDATA_DIR)) {
-        fs.mkdirSync(USERDATA_DIR, { recursive: true });
+    if (!existsSync(USERDATA_DIR)) {
+        mkdirSync(USERDATA_DIR, { recursive: true });
     }
 }
 
 function getUserPath(contactIdUser) {
-    const filename = `${contactIdUser}.json`;
-    return path.join(USERDATA_DIR, filename);
+    return join(USERDATA_DIR, `${contactIdUser}.json`);
 }
 
 function userExists(contactIdUser) {
-    return fs.existsSync(getUserPath(contactIdUser));
+    return existsSync(getUserPath(contactIdUser));
 }
 
 function userNameExists(contactUsername) {
-    return fs.readdirSync(USERDATA_DIR).some(file => {
-        return JSON.parse(fs.readFileSync(path.join(USERDATA_DIR, file), 'utf-8')).username === contactUsername;
+    return readdirSync(USERDATA_DIR).some(file => {
+        return JSON.parse(readFileSync(join(USERDATA_DIR, file), 'utf-8')).username === contactUsername;
     });
 }
 
 function getUser(contactIdUser) {
     if (!userExists(contactIdUser)) return null;
-    const raw = fs.readFileSync(getUserPath(contactIdUser), 'utf-8');
-    return JSON.parse(raw);
+    return JSON.parse(readFileSync(getUserPath(contactIdUser), 'utf-8'));
 }
 
 function saveUser(contactIdUser, data) {
     ensureDir();
-    fs.writeFileSync(getUserPath(contactIdUser), JSON.stringify(data, null, 2));
+    writeFileSync(getUserPath(contactIdUser), JSON.stringify(data, null, 2));
 }
 
 function editUser(contactIdUser, newData) {
     if (!userExists(contactIdUser)) return null;
-    const userData = getUser(contactIdUser);
-    const updatedData = { ...userData, ...newData };
+    const updatedData = { ...getUser(contactIdUser), ...newData };
     saveUser(contactIdUser, updatedData);
     return updatedData;
 }
@@ -59,4 +60,4 @@ function createUser(contactIdUser, contactUsername) {
     return data;
 }
 
-module.exports = { userExists, getUser, saveUser, createUser, userNameExists, editUser };
+export { userExists, getUser, saveUser, createUser, userNameExists, editUser };

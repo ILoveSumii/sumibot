@@ -1,15 +1,14 @@
-module.exports = {
-    name: "sticker",
-    description: "Convierte una imagen o video en sticker",
-    aliases: ["st", "s"],
+import { downloadMediaMessage } from '@whiskeysockets/baileys';
 
-    async execute({ client, message, MessageTypes }) {
+export default {
+    name: 'sticker',
+    description: 'Convierte una imagen o video en sticker',
+    aliases: ['st', 's'],
 
-        const media = await message.downloadMedia();
+    async execute({ sock, msg, jid }) {
+        const buffer = await downloadMediaMessage(msg, 'buffer', {});
+        if (!buffer) return;
         await new Promise(resolve => setTimeout(resolve, 2000));
-        if(!media) return;
-        await client.sendMessage(message.from, media, {
-            sendMediaAsSticker: true
-        });
+        await sock.sendMessage(jid, { sticker: buffer });
     }
 };

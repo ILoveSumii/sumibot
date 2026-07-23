@@ -1,23 +1,23 @@
-const { Client, LocalAuth, MessageTypes } = require('whatsapp-web.js');
-const { predis, getPredi, vote, onClose } = require('./util/predictions');
-const { getUser, editUser } = require('./util/user')
-const qrcode = require('qrcode-terminal');
-const fs = require('fs');
-const path = require('path');
+import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, getContentType, downloadMediaMessage } from '@whiskeysockets/baileys';
+import QRCode from 'qrcode';
+import { getPredi, vote, onClose } from './util/predictions.js';
+import { getUser } from './util/user.js';
+import { readdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import pino from 'pino';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PREFIXES = [".sumi", ".Sumi", ".SUMI"];
-
-const client = new Client({
-    authStrategy: new LocalAuth()
-});
-
 const commands = new Map();
 
-const commandsPath = path.join(__dirname, "commands");
-const commandFiles = fs.readdirSync(commandsPath);
+const commandsPath = join(__dirname, "commands");
+const commandFiles = readdirSync(commandsPath);
 
 for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
+    const command = (await import(`./commands/${file}`)).default;
 
     if (!command.name || typeof command.execute !== "function") {
         console.warn(`Not valid command: ${file}`);
@@ -27,103 +27,125 @@ for (const file of commandFiles) {
     commands.set(command.name, command);
 
     if (command.aliases) {
-        command.aliases.forEach(alias => {
-            commands.set(alias, command);
-        });
+        command.aliases.forEach(alias => commands.set(alias, command));
     }
 }
 
-client.once('ready', () => {
-    console.log('Client is ready!');
-});
-
-client.on('qr', (qr) => {
-    qrcode.generate(qr, { small: true });
-});
-
-function parseMessage(message) {
-    const parts = message.trim().split(/\s+/);
-
+function parseMessage(body) {
+    const parts = body.trim().split(/\s+/);
     if (!PREFIXES.includes(parts[0])) return null;
-
     return {
         command: parts[1]?.toLowerCase(),
         args: parts.slice(2)
     };
 }
 
-client.on('message', async message => {
-    await sleep(1500);
-
-    contact = await message.getContact();
-
-    const chat = await message.getChat();
-    if (chat.isGroup && !PREFIXES.includes(message.body.split(/\s+/)[0])) return;
-
-    const parsed = parseMessage(message.body);
-
-    if (parsed) {
-        const { command, args } = parsed;
-        const cmd = commands.get(command);
-
-        if (!cmd) {
-            message.reply("Comando desconocido. Usa .sumi help para ver los comandos disponibles.");
-            return console.warn("Unknown command:", command);
-        }
-
-        try {
-            await cmd.execute({
-                client,
-                message,
-                args,
-                MessageTypes,
-                commands,
-                contact
-            });
-        } catch (err) {
-            console.error(err);
-            message.reply("Error al ejecutar el comando D:");
-        }
-
-        return;
-    }
-
-    if (message.type === MessageTypes.IMAGE || message.type === MessageTypes.VIDEO) {
-        await sleep(2000);
-        const media = await message.downloadMedia();
-        if(!media) return;
-        await client.sendMessage(message.from, media, {
-            sendMediaAsSticker: true
-        });
-    }
-
-});
-
-client.on('message_reaction', async reaction => {
-
-    let predict = getPredi(reaction.msgId.id);
-
-    if(!predict || predict.closed){
-        return;
-    }
-
-    let reactionEmoji = reaction.reaction;
-    let userThatReacted = (await client.getContactById(reaction.senderId)).id.user;
-
-    if(!getUser(userThatReacted)){
-        return;
-    }
-
-    vote(predict, userThatReacted, reactionEmoji);
-
-});
-
-onClose((predict) => {
-    predict.predictionMessage.reply(`¡Predicción cerrada! | ${predict.positiveVotes.size} 👍 | ${predict.negativeVotes.size} 😢`);
-});
-
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-client.initialize();
+async function connectToWhatsApp() {
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    const { version } = await fetchLatestBaileysVersion();
+
+    const sock = makeWASocket({
+        version,
+        auth: state,
+        logger: pino({ level: 'silent' })
+    });
+
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
+        if (qr) {
+            console.log(await QRCode.toString(qr, { type: 'terminal', small: true, scale: 2 }));
+        }
+
+        if (connection === 'close') {
+            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            if (shouldReconnect) connectToWhatsApp();
+        } else if (connection === 'open') {
+            console.log('Client is ready!');
+        }
+    });
+
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+        if (type !== 'notify') return;
+
+        for (const msg of messages) {
+            if (msg.key.fromMe) continue;
+            if (!msg.message) continue;
+
+            await sleep(1500);
+
+            const jid = msg.key.remoteJid;
+            const isGroup = jid.endsWith('@g.us');
+            const senderLid = isGroup ? msg.key.participant : jid;
+            const senderNumber = senderLid.split('@')[0];
+
+            console.log(senderNumber, msg.pushName, msg.message.text || msg.message.conversation || msg.message.extendedTextMessage?.text);
+
+            const msgType = getContentType(msg.message);
+            const body = msg.message?.conversation
+                || msg.message?.extendedTextMessage?.text
+                || '';
+
+            const parsed = parseMessage(body);
+
+            if (parsed) {
+                const { command, args } = parsed;
+                const cmd = commands.get(command);
+
+                if (!cmd) {
+                    await sock.sendMessage(jid, { text: 'Comando desconocido. Usa .sumi help para ver los comandos disponibles.' }, { quoted: msg });
+                    console.warn('Unknown command:', command);
+                    continue;
+                }
+
+                try {
+                    await cmd.execute({ sock, msg, args, commands, senderNumber, jid });
+                } catch (err) {
+                    console.error(err);
+                    await sock.sendMessage(jid, { text: 'Error al ejecutar el comando D:' }, { quoted: msg });
+                }
+
+                continue;
+            }
+
+            if (msgType === 'imageMessage' || msgType === 'videoMessage') {
+                await sleep(2000);
+                const buffer = await downloadMediaMessage(msg, 'buffer', {});
+                if (!buffer) continue;
+                await sock.sendMessage(jid, { sticker: buffer });
+            }
+        }
+    });
+
+    sock.ev.on('messages.reaction', async (reactions) => {
+        for (const { key, reaction } of reactions) {
+            const msgId = key.id;
+            const predict = getPredi(msgId);
+
+            if (!predict || predict.closed) continue;
+
+            const reactionEmoji = reaction.text;
+            const senderNumber = reaction.key?.participant?.split('@')[0] || key.remoteJid.split('@')[0];
+
+            const usuario = await getUser(senderNumber);
+            if (!usuario) continue;
+
+            vote(predict, senderNumber, reactionEmoji);
+        }
+    });
+
+    onClose(async (predict) => {
+        const jid = predict.predictionMessage.key.remoteJid;
+        await sock.sendMessage(jid, {
+            text: `¡Predicción cerrada! | ${predict.positiveVotes.size} 👍 | ${predict.negativeVotes.size} 😢`
+        }, { quoted: predict.predictionMessage });
+    });
+
+    return sock;
+}
+
+connectToWhatsApp();

@@ -1,20 +1,19 @@
-const { getUser, saveUser, createUser, userExists } = require('../util/user');
+import { getUser } from '../util/user.js';
 
-module.exports = {
+export default {
     name: 'balance',
     description: 'Muestra el saldo de Sumicoins del usuario',
     usage: '.sumi balance',
     aliases: ['money', 'bal'],
 
-    async execute({ message, args, contact }) {
-        const userId = contact.id.user;
-        const user = await getUser(userId);
+    async execute({ sock, msg, jid, senderNumber }) {
+        const user = getUser(senderNumber);
 
         if (!user) {
-            return message.reply('No estás registrado. Usa *.sumi register* para registrarte.');
+            await sock.sendMessage(jid, { text: 'No estás registrado. Usa *.sumi register* para registrarte.' }, { quoted: msg });
+            return;
         }
 
-        message.reply(`Tienes ${user.sumicoins}🌸 Sumicoins 3:`);
+        await sock.sendMessage(jid, { text: `Tienes ${user.sumicoins}🌸 Sumicoins 3:` }, { quoted: msg });
     }
-        
 };

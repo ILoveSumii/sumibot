@@ -1,6 +1,7 @@
 import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, getContentType, downloadMediaMessage } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
 import { getPredi, vote, onClose } from './util/predictions.js';
+import { imageToWebp, videoToWebp } from './util/media.js';
 import { getUser } from './util/user.js';
 import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -83,11 +84,13 @@ async function connectToWhatsApp() {
             const senderLid = isGroup ? msg.key.participant : jid;
             const senderNumber = senderLid.split('@')[0];
 
-            console.log(senderNumber, msg.pushName, msg.message.text || msg.message.conversation || msg.message.extendedTextMessage?.text);
+            console.log(jid, senderNumber, msg.pushName, msg.message.text || msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || msg.message.videoMessage?.caption);
 
             const msgType = getContentType(msg.message);
             const body = msg.message?.conversation
                 || msg.message?.extendedTextMessage?.text
+                || msg.message.imageMessage?.caption 
+                || msg.message.videoMessage?.caption
                 || '';
 
             const parsed = parseMessage(body);
@@ -95,6 +98,8 @@ async function connectToWhatsApp() {
             if (parsed) {
                 const { command, args } = parsed;
                 const cmd = commands.get(command);
+
+                console.log(`Command: ${command}, Args: ${args.join(' ')}`);
 
                 if (!cmd) {
                     await sock.sendMessage(jid, { text: 'Comando desconocido. Usa .sumi help para ver los comandos disponibles.' }, { quoted: msg });
@@ -112,11 +117,13 @@ async function connectToWhatsApp() {
                 continue;
             }
 
-            if (msgType === 'imageMessage' || msgType === 'videoMessage') {
+            if ((msgType === 'imageMessage' || msgType === 'videoMessage') && !isGroup) {
+                console.log('Received media message, converting to sticker...');
                 await sleep(2000);
                 const buffer = await downloadMediaMessage(msg, 'buffer', {});
                 if (!buffer) continue;
-                await sock.sendMessage(jid, { sticker: buffer });
+                const webp = msgType === 'imageMessage' ? await imageToWebp(buffer) : await videoToWebp(buffer);
+                await sock.sendMessage(jid, { sticker: webp });
             }
         }
     });

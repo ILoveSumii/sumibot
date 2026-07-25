@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const TEMP_DIR = join(__dirname, '../../datafiles/temp/sticker');
+const TEMP_DIR = join(__dirname, '../datafiles/temp/sticker');
 
 if (!existsSync(TEMP_DIR)) {
     mkdirSync(TEMP_DIR, { recursive: true });

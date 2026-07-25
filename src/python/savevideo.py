@@ -1,20 +1,22 @@
 import yt_dlp
 import json
-import datetime
 import sys
+import os
 
 def save_video(url, outputdirectory):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_template = os.path.join(script_dir, '..', 'datafiles', 'temp', 'videos', f'{outputdirectory}.%(ext)s')
     ydl_opts = {
-        'outtmpl': f'../datafiles/temp/videos/{outputdirectory}.%(ext)s',
+        'outtmpl': output_template,
         'format': 'bestvideo+bestaudio/best',
-        'quiet': True,
         'merge_output_format': 'mp4',
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         real_path = ydl.prepare_filename(info).replace('.webm', '.mp4').replace('.mkv', '.mp4')
-        print(json.dumps({ 'path': real_path }))
+        sys.stdout.write(json.dumps({ 'path': real_path }) + '\n')
+        sys.stdout.flush()
         sys.exit(0)
     
 if(len(sys.argv) < 3):

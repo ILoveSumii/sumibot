@@ -8,6 +8,12 @@ export default {
 
     async execute({ sock, msg, jid }) {
         const msgType = getContentType(msg.message);
+
+        if (msgType !== 'imageMessage' && msgType !== 'videoMessage') {
+            await sock.sendMessage(jid, { text: 'Manda la imagen o video junto con el comando d:' }, { quoted: msg });
+            return;
+        }
+
         const buffer = await downloadMediaMessage(msg, 'buffer', {});
         if (!buffer) return;
 

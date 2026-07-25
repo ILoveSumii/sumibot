@@ -2,21 +2,22 @@ const predis = new Map();
 let _onClose = null;
 let _onVote = null;
 
-function onClose(fn){
+const THUMBS_UP = new Set(['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿']);
+
+function onClose(fn) {
     _onClose = fn;
 }
 
-function onVote(fn){
+function onVote(fn) {
     _onVote = fn;
 }
 
-function createPrediction(prize, timelimitMinutes, predictionMessage){
-
-    let predictionTimeLimitInMs = timelimitMinutes * 60 * 1000;
-    let instantNow = Date.now();
+function createPrediction(prize, timelimitMinutes, predictionMessage) {
+    const predictionTimeLimitInMs = timelimitMinutes * 60 * 1000;
+    const instantNow = Date.now();
 
     const prediccion = {
-        predictionMessage: predictionMessage,
+        predictionMessage,
         sumicoinsPrize: prize,
         createdAt: instantNow,
         expiration: instantNow + predictionTimeLimitInMs,
@@ -24,45 +25,38 @@ function createPrediction(prize, timelimitMinutes, predictionMessage){
         negativeVotes: new Set(),
         closed: false,
         resolved: false
-    }
+    };
 
-    predis.set(predictionMessage.id.id, prediccion);
-
-    setTimeout(() => closePrediction(predictionMessage.id.id), predictionTimeLimitInMs);
+    predis.set(predictionMessage.key.id, prediccion);
+    setTimeout(() => closePrediction(predictionMessage.key.id), predictionTimeLimitInMs);
 
     return prediccion;
-
 }
 
-function closePrediction(predictionId){
+function closePrediction(predictionId) {
     const pred = predis.get(predictionId);
-
-    if(pred.closed){
-        return;
-    }
+    if (!pred || pred.closed) return;
 
     pred.closed = true;
-
-    if(_onClose) {
-        _onClose(pred);
-    }
+    if (_onClose) _onClose(pred);
 }
 
-function vote(pred, userNumber, optionVotedFor){
-    if(!pred || pred.closed){
-        return;
-    }
+function reopenPrediction(predictionId, extraMinutes) {
+    const pred = predis.get(predictionId);
+    if (!pred) return;
 
-    const thumbsUp = new Set([
-        '👍',
-        '👍🏻',
-        '👍🏼',
-        '👍🏽',
-        '👍🏾',
-        '👍🏿',
-    ]);
+    const extraMs = extraMinutes * 60 * 1000;
+    pred.closed = false;
+    pred.resolved = false;
+    pred.expiration = Date.now() + extraMs;
 
-    if (thumbsUp.has(optionVotedFor)) {
+    setTimeout(() => closePrediction(predictionId), extraMs);
+}
+
+function vote(pred, userNumber, optionVotedFor) {
+    if (!pred || pred.closed) return;
+
+    if (THUMBS_UP.has(optionVotedFor)) {
         pred.negativeVotes.delete(userNumber);
         pred.positiveVotes.add(userNumber);
     } else if (optionVotedFor === '😢') {
@@ -71,8 +65,8 @@ function vote(pred, userNumber, optionVotedFor){
     }
 }
 
-function getPredi(id){
+function getPredi(id) {
     return predis.get(id);
 }
 
-module.exports = { predis, createPrediction, closePrediction, onClose, getPredi, vote }
+export { predis, createPrediction, closePrediction, reopenPrediction, onClose, getPredi, vote };

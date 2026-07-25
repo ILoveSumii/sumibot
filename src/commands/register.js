@@ -1,30 +1,31 @@
-const { getUser, saveUser, createUser, userExists, userNameExists } = require('../util/user');
+import { createUser, userExists, userNameExists } from '../util/user.js';
 
-module.exports = {
-    name: "register",
-    description: "Registra un nuevo usuario en el sistemita del bot | .sumi register [nombre]",
-    longDescription: "Registrarse en el sistemita del bot para usar varios comandos adicionales.\nSe registrará el número de teléfono como identificador.",
-    usage: ".sumi register [nombre]",
-    aliases: ["reg"],
+export default {
+    name: 'register',
+    description: 'Registra un nuevo usuario en el sistemita del bot | .sumi register [nombre]',
+    longDescription: 'Registrarse en el sistemita del bot para usar varios comandos adicionales.\nSe registrará el número de teléfono como identificador.',
+    usage: '.sumi register [nombre]',
+    aliases: ['reg'],
 
-    async execute({ client, message, args, MessageTypes }) {
-        const contact = await message.getContact();
-        const contactIdUser = contact.id.user;
-        const contactuserName = args.length > 0 ? args.join(" ") : contact.pushname || contact.number;
+    async execute({ sock, msg, args, jid, senderNumber }) {
+        const contactUsername = args.length > 0 ? args.join(' ') : msg.pushName || senderNumber;
 
-        if (userExists(contactIdUser)) {
-            return message.reply("Ya estás registrado.");
+        if (userExists(senderNumber)) {
+            await sock.sendMessage(jid, { text: 'Ya estás registrado.' }, { quoted: msg });
+            return;
         }
 
-        if(contactuserName.length > 15){
-            return message.reply("Nombre menos largo por fa :c (max. 15 letras)");
+        if (contactUsername.length > 15) {
+            await sock.sendMessage(jid, { text: 'Nombre menos largo por fa :c (max. 15 letras)' }, { quoted: msg });
+            return;
         }
 
-        if(userNameExists(contactuserName)) {
-            return message.reply("Alguien más ya tiene ese nombre :P");
+        if (userNameExists(contactUsername)) {
+            await sock.sendMessage(jid, { text: 'Alguien más ya tiene ese nombre :P' }, { quoted: msg });
+            return;
         }
 
-        await createUser(contactIdUser, contactuserName);
-        message.reply(`Listo, ${contactuserName} ;3 | 100 Sumicoins pa ti.`);
+        createUser(senderNumber, contactUsername);
+        await sock.sendMessage(jid, { text: `Listo, ${contactUsername} ;3 | 100 Sumicoins pa ti.` }, { quoted: msg });
     }
-};
+};  

@@ -1,15 +1,28 @@
-module.exports = {
-    name: "sticker",
-    description: "Convierte una imagen o video en sticker",
-    aliases: ["st", "s"],
+import { downloadMediaMessage, getContentType } from '@whiskeysockets/baileys';
+import { imageToWebp, videoToWebp } from '../util/media.js';
 
-    async execute({ client, message, MessageTypes }) {
+export default {
+    name: 'sticker',
+    description: 'Convierte una imagen o video en sticker',
+    aliases: ['st', 's'],
 
-        const media = await message.downloadMedia();
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        if(!media) return;
-        await client.sendMessage(message.from, media, {
-            sendMediaAsSticker: true
-        });
+    async execute({ sock, msg, jid }) {
+        const msgType = getContentType(msg.message);
+
+        if (msgType !== 'imageMessage' && msgType !== 'videoMessage') {
+            await sock.sendMessage(jid, { text: 'Manda la imagen o video junto con el comando d:' }, { quoted: msg });
+            return;
+        }
+
+        const buffer = await downloadMediaMessage(msg, 'buffer', {});
+        if (!buffer) return;
+
+        if (msgType === 'imageMessage') {
+            const webp = await imageToWebp(buffer);
+            await sock.sendMessage(jid, { sticker: webp }, { quoted: msg });
+        } else if (msgType === 'videoMessage') {
+            const webp = await videoToWebp(buffer);
+            await sock.sendMessage(jid, { sticker: webp }, { quoted: msg });
+        }
     }
 };

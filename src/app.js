@@ -77,7 +77,7 @@ async function connectToWhatsApp() {
             if (msg.key.fromMe) continue;
             if (!msg.message) continue;
 
-            await sleep(1500);
+            await sleep(2500);
 
             const jid = msg.key.remoteJid;
             const isGroup = jid.endsWith('@g.us');

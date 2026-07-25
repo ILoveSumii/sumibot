@@ -43,6 +43,7 @@ ${cmd.aliases ? '*Aliases:* ' + cmd.aliases.join(', ') : ''}`
             response += `*.sumi ${cmd.name}* → ${cmd.description}\n`;
         });
         response += '\nUsa *.sumi help [comando]* para más detalles';
+        response += '\n\nDejá la estrellita y colaborá en GitHub: https://github.com/ILoveSumii/sumibot';
 
         await sock.sendMessage(jid, { text: response }, { quoted: msg });
     }

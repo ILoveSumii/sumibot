@@ -14,7 +14,7 @@ def save_video(url, outputdirectory):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
-        real_path = ydl.prepare_filename(info).replace('.webm', '.mp4').replace('.mkv', '.mp4')
+        real_path = info['requested_downloads'][0]['filepath']
         sys.stdout.write(json.dumps({ 'path': real_path }) + '\n')
         sys.stdout.flush()
         sys.exit(0)
@@ -51,4 +51,3 @@ if(len(sys.argv) == 4 and sys.argv[3] == "--info"):
         sys.exit(0)
 
 save_video(sys.argv[1], sys.argv[2])
-

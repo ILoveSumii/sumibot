@@ -2,6 +2,7 @@ import { readFileSync, unlinkSync, statSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
+import { join, dirname, delimiter } from 'path';
 import { userExists } from '../util/user.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,21 +10,26 @@ const __dirname = dirname(__filename);
 
 function downloadVideo(url, outputDir) {
     return new Promise((resolve, reject) => {
-        const python = 'python';
-        const script = join(__dirname, '../python/savevideo.py');
+        const isWin = process.platform === 'win32';
         const rootDir = join(__dirname, '../');
+        const venvDir = join(rootDir, 'venv');
+        const binDir = join(venvDir, isWin ? 'Scripts' : 'bin');
+        const python = join(binDir, isWin ? 'python.exe' : 'python');
+        const script = join(__dirname, '../python/savevideo.py');
 
         const proc = spawn(python, [script, url, outputDir], {
             cwd: rootDir,
             env: {
                 ...process.env,
-                VIRTUAL_ENV: join(rootDir, 'venv'),
-                PATH: `${join(rootDir, 'venv/Scripts')};${process.env.PATH}`
+                VIRTUAL_ENV: venvDir,
+                PATH: `${binDir}${delimiter}${process.env.PATH}`
             }
         });
 
         let output = '';
         let error = '';
+
+        proc.on('error', reject); // por si no encuentra el ejecutable
 
         proc.stdout.on('data', (data) => output += data.toString());
         proc.stderr.on('data', (data) => error += data.toString());

@@ -89,7 +89,7 @@ export default {
             if (sizeBytes > MAX_MB * 1024 * 1024) throw new VideoTooLargeError(sizeBytes);
 
             const buffer = readFileSync(realPath);
-            await sock.sendMessage(jid, { video: buffer }, { quoted: msg });
+            await sock.sendMessage(jid, { video: buffer, mimetype: 'video/mp4' }, { quoted: msg });
 
         } catch (err) {
             if (err instanceof VideoTooLargeError) {

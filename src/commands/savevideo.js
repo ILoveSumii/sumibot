@@ -67,13 +67,13 @@ export default {
     usage: '.sumi savevideo [link]',
     aliases: ['descargar-video', 'descargarvideo', 'savevid'],
 
-    async execute({ sock, msg, args, jid, senderNumber }) {
+    async execute({ sock, msg, args, jid, userId }) {
         if (!args[0]) {
             await sock.sendMessage(jid, { text: 'No pusiste el link :p' }, { quoted: msg });
             return;
         }
 
-        if (!userExists(senderNumber)) {
+        if (!userExists(userId)) {
             await sock.sendMessage(jid, { text: 'Tienes q registrarte para descargar videos 3: .sumi register [nombre]' }, { quoted: msg });
             return;
         }
@@ -83,7 +83,7 @@ export default {
         let realPath = null;
 
         try {
-            realPath = await downloadVideo(args[0], `${senderNumber}_${Date.now()}`);
+            realPath = await downloadVideo(args[0], `${userId}_${Date.now()}`);
 
             const sizeBytes = statSync(realPath).size;
             if (sizeBytes > MAX_MB * 1024 * 1024) throw new VideoTooLargeError(sizeBytes);

@@ -78,9 +78,10 @@ sumibot/
 
 ```
 
-## Notas
+## Notes
 
 -   Users are identified by their WhatsApp LID (which functions as a unique identifier).
+-   Older user files saved under a phone number are moved to the user's LID automatically (when the bot connects, or the next time that user writes). The old file is kept as a backup in datafiles/userdata_migrated.
 -   As for now, only users with `ADMIN` role may execute certain commands. You may assing a user `ADMIN` role by accesing their user file in datafiles/userdata (if they are registered).
 -   As it name suggests, datafiles/temp is used to save files temporarily while being worked with.
 -   If an image/video is sent to the bot directly by private chat, the bot converts it to sticker automatically

@@ -2,7 +2,8 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaile
 import QRCode from 'qrcode';
 import { getPredi, vote, onClose } from './util/predictions.js';
 import { imageToWebp, videoToWebp } from './util/media.js';
-import { getUser } from './util/user.js';
+import { getUser, migrateStoredUsers } from './util/user.js';
+import { resolveUserId } from './util/identity.js';
 import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -67,6 +68,11 @@ async function connectToWhatsApp() {
             if (shouldReconnect) connectToWhatsApp();
         } else if (connection === 'open') {
             console.log('Client is ready!');
+            try {
+                await migrateStoredUsers(sock);
+            } catch (err) {
+                console.error('User ID migration failed:', err);
+            }
         }
     });
 
@@ -81,10 +87,12 @@ async function connectToWhatsApp() {
 
             const jid = msg.key.remoteJid;
             const isGroup = jid.endsWith('@g.us');
-            const senderLid = isGroup ? msg.key.participant : jid;
-            const senderNumber = senderLid.split('@')[0];
+            const senderJid = isGroup ? msg.key.participant : jid;
+            const senderAltJid = isGroup ? msg.key.participantAlt : msg.key.remoteJidAlt;
+            const userId = await resolveUserId(sock, senderJid, senderAltJid);
+            if (!userId) continue;
 
-            console.log(jid, senderNumber, msg.pushName, msg.message.text || msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || msg.message.videoMessage?.caption);
+            console.log(jid, userId, msg.pushName, msg.message.text || msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || msg.message.videoMessage?.caption);
 
             const msgType = getContentType(msg.message);
             const body = msg.message?.conversation
@@ -108,7 +116,7 @@ async function connectToWhatsApp() {
                 }
 
                 try {
-                    await cmd.execute({ sock, msg, args, commands, senderNumber, jid });
+                    await cmd.execute({ sock, msg, args, commands, userId, jid });
                 } catch (err) {
                     console.error(err);
                     await sock.sendMessage(jid, { text: 'Error al ejecutar el comando D:' }, { quoted: msg });
@@ -136,12 +144,15 @@ async function connectToWhatsApp() {
             if (!predict || predict.closed) continue;
 
             const reactionEmoji = reaction.text;
-            const senderNumber = reaction.key?.participant?.split('@')[0] || key.remoteJid.split('@')[0];
+            const reactionKey = reaction.key || key;
 
-            const usuario = await getUser(senderNumber);
-            if (!usuario) continue;
+            const isGroupReaction = reactionKey.remoteJid?.endsWith('@g.us');
+            const userId = isGroupReaction
+                ? await resolveUserId(sock, reactionKey.participant, reactionKey.participantAlt)
+                : await resolveUserId(sock, reactionKey.remoteJid, reactionKey.remoteJidAlt);
+            if (!userId || !getUser(userId)) continue;
 
-            vote(predict, senderNumber, reactionEmoji);
+            vote(predict, userId, reactionEmoji);
         }
     });
 

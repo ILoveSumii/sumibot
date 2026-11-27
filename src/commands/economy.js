@@ -10,8 +10,8 @@ subcommands.set('help', async ({ sock, msg, jid }) => {
     await sock.sendMessage(jid, { text: response }, { quoted: msg });
 });
 
-subcommands.set('balance', async ({ sock, msg, jid, senderNumber }) => {
-    const user = getUser(senderNumber);
+subcommands.set('balance', async ({ sock, msg, jid, userId }) => {
+    const user = getUser(userId);
     if (!user) {
         await sock.sendMessage(jid, { text: 'No estás registrado. Usa *.sumi economy register* para registrarte.' }, { quoted: msg });
         return;
@@ -26,7 +26,7 @@ export default {
     usage: '.sumi economy [help]',
     aliases: ['eco', 'e'],
 
-    async execute({ sock, msg, args, jid, senderNumber }) {
+    async execute({ sock, msg, args, jid, userId }) {
         const sub = args[0]?.toLowerCase();
 
         if (!sub) {
@@ -41,6 +41,6 @@ export default {
             return;
         }
 
-        await subcommand({ sock, msg, args, jid, senderNumber });
+        await subcommand({ sock, msg, args, jid, userId });
     }
 };

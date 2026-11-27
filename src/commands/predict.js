@@ -77,8 +77,8 @@ export default {
     usage: '.sumi predict [Premio] [Limite (minutos)] [Prediccion]',
     aliases: ['pred', 'p'],
 
-    async execute({ sock, msg, args, jid, senderNumber }) {
-        const predAuthor = getUser(senderNumber);
+    async execute({ sock, msg, args, jid, userId }) {
+        const predAuthor = getUser(userId);
         if (!predAuthor || predAuthor.role !== 'ADMIN') return;
 
         const quotedMsg = msg.message?.extendedTextMessage?.contextInfo;

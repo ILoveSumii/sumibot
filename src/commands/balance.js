@@ -6,8 +6,8 @@ export default {
     usage: '.sumi balance',
     aliases: ['money', 'bal'],
 
-    async execute({ sock, msg, jid, senderNumber }) {
-        const user = getUser(senderNumber);
+    async execute({ sock, msg, jid, userId }) {
+        const user = getUser(userId);
 
         if (!user) {
             await sock.sendMessage(jid, { text: 'No estás registrado. Usa *.sumi register* para registrarte.' }, { quoted: msg });

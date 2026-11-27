@@ -10,8 +10,8 @@ subcommands.set('help', async ({ sock, msg, jid }) => {
     await sock.sendMessage(jid, { text: response }, { quoted: msg });
 });
 
-subcommands.set('nombre', async ({ sock, msg, jid, senderNumber, args }) => {
-    const user = getUser(senderNumber);
+subcommands.set('nombre', async ({ sock, msg, jid, userId, args }) => {
+    const user = getUser(userId);
 
     if (!user) {
         await sock.sendMessage(jid, { text: 'No estás registrado. Usa *.sumi register* para registrarte.' }, { quoted: msg });
@@ -35,7 +35,7 @@ subcommands.set('nombre', async ({ sock, msg, jid, senderNumber, args }) => {
         return;
     }
 
-    editUser(senderNumber, { username: newName });
+    editUser(userId, { username: newName });
     await sock.sendMessage(jid, { text: `Ya quedó tu nuevo nombre, ${newName} n.n` }, { quoted: msg });
 });
 
@@ -44,7 +44,7 @@ export default {
     description: 'Edita la información de tu usuario de sumibot',
     usage: '.sumi edit [algo]',
 
-    async execute({ sock, msg, args, jid, senderNumber }) {
+    async execute({ sock, msg, args, jid, userId }) {
         const sub = args[0]?.toLowerCase();
 
         if (!sub) {
@@ -59,6 +59,6 @@ export default {
             return;
         }
 
-        await subcommand({ sock, msg, args, jid, senderNumber });
+        await subcommand({ sock, msg, args, jid, userId });
     }
 };

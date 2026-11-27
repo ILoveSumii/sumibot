@@ -7,10 +7,10 @@ export default {
     usage: '.sumi register [nombre]',
     aliases: ['reg'],
 
-    async execute({ sock, msg, args, jid, senderNumber }) {
-        const contactUsername = args.length > 0 ? args.join(' ') : msg.pushName || senderNumber;
+    async execute({ sock, msg, args, jid, userId }) {
+        const contactUsername = args.length > 0 ? args.join(' ') : msg.pushName || userId;
 
-        if (userExists(senderNumber)) {
+        if (userExists(userId)) {
             await sock.sendMessage(jid, { text: 'Ya estás registrado.' }, { quoted: msg });
             return;
         }
@@ -25,7 +25,7 @@ export default {
             return;
         }
 
-        createUser(senderNumber, contactUsername);
+        createUser(userId, contactUsername);
         await sock.sendMessage(jid, { text: `Listo, ${contactUsername} ;3 | 100 Sumicoins pa ti.` }, { quoted: msg });
     }
 };  

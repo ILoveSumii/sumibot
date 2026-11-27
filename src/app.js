@@ -2,7 +2,8 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaile
 import QRCode from 'qrcode';
 import { getPredi, vote, onClose } from './util/predictions.js';
 import { imageToWebp, videoToWebp } from './util/media.js';
-import { getUser, migrateStoredUsers } from './util/user.js';
+import { getUser, migrateStoredUsers, importJsonUsers } from './util/user.js';
+import { connectDB } from './util/db.js';
 import { resolveUserId } from './util/identity.js';
 import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -150,7 +151,7 @@ async function connectToWhatsApp() {
             const userId = isGroupReaction
                 ? await resolveUserId(sock, reactionKey.participant, reactionKey.participantAlt)
                 : await resolveUserId(sock, reactionKey.remoteJid, reactionKey.remoteJidAlt);
-            if (!userId || !getUser(userId)) continue;
+            if (!userId || !(await getUser(userId))) continue;
 
             vote(predict, userId, reactionEmoji);
         }
@@ -166,4 +167,6 @@ async function connectToWhatsApp() {
     return sock;
 }
 
+await connectDB();
+await importJsonUsers();
 connectToWhatsApp();

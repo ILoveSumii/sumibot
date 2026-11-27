@@ -10,7 +10,7 @@ export default {
     async execute({ sock, msg, args, jid, userId }) {
         const contactUsername = args.length > 0 ? args.join(' ') : msg.pushName || userId;
 
-        if (userExists(userId)) {
+        if (await userExists(userId)) {
             await sock.sendMessage(jid, { text: 'Ya estás registrado.' }, { quoted: msg });
             return;
         }
@@ -20,12 +20,15 @@ export default {
             return;
         }
 
-        if (userNameExists(contactUsername)) {
+        if (await userNameExists(contactUsername)) {
             await sock.sendMessage(jid, { text: 'Alguien más ya tiene ese nombre :P' }, { quoted: msg });
             return;
         }
 
-        createUser(userId, contactUsername);
+        if (!(await createUser(userId, contactUsername))) {
+            await sock.sendMessage(jid, { text: 'Ya estás registrado.' }, { quoted: msg });
+            return;
+        }
         await sock.sendMessage(jid, { text: `Listo, ${contactUsername} ;3 | 100 Sumicoins pa ti.` }, { quoted: msg });
     }
 };  

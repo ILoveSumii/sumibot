@@ -11,7 +11,7 @@ subcommands.set('help', async ({ sock, msg, jid }) => {
 });
 
 subcommands.set('nombre', async ({ sock, msg, jid, userId, args }) => {
-    const user = getUser(userId);
+    const user = await getUser(userId);
 
     if (!user) {
         await sock.sendMessage(jid, { text: 'No estás registrado. Usa *.sumi register* para registrarte.' }, { quoted: msg });
@@ -25,7 +25,7 @@ subcommands.set('nombre', async ({ sock, msg, jid, userId, args }) => {
         return;
     }
 
-    if (userNameExists(newName)) {
+    if (await userNameExists(newName)) {
         await sock.sendMessage(jid, { text: 'Ya alguien tiene ese nombre u.u' }, { quoted: msg });
         return;
     }
@@ -35,7 +35,7 @@ subcommands.set('nombre', async ({ sock, msg, jid, userId, args }) => {
         return;
     }
 
-    editUser(userId, { username: newName });
+    await editUser(userId, { username: newName });
     await sock.sendMessage(jid, { text: `Ya quedó tu nuevo nombre, ${newName} n.n` }, { quoted: msg });
 });
 

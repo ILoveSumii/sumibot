@@ -73,7 +73,7 @@ export default {
             return;
         }
 
-        if (!userExists(userId)) {
+        if (!(await userExists(userId))) {
             await sock.sendMessage(jid, { text: 'Tienes q registrarte para descargar videos 3: .sumi register [nombre]' }, { quoted: msg });
             return;
         }

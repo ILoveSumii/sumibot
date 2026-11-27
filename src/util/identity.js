@@ -29,7 +29,13 @@ export async function resolveUserId(sock, ...jids) {
     const pn = pnJid ? userPart(pnJid) : null;
 
     // Someone who registered under their phone number gets moved to their LID
-    if (lid && pn) migrateUser(pn, lid);
+    if (lid && pn) {
+        try {
+            await migrateUser(pn, lid);
+        } catch (err) {
+            console.error(`Could not migrate ${pn} to ${lid}:`, err);
+        }
+    }
 
     if (!lid && pn) console.warn(`No LID known for ${pn}, using phone number for now`);
 

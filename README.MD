@@ -7,9 +7,10 @@ WhatsApp bot built with [Baileys](https://github.com/WhiskeySockets/Baileys) usi
 
 ## Requirements
 
--   Node.js v18+ and pnpm (npm works too, but it only has the pnpm-lock right now).
+-   Node.js v20.12+ and pnpm (npm works too, but it only has the pnpm-lock right now).
 -   Python 3.10+
 -   ffmpeg
+-   MongoDB (a local install or a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster)
 
 ## Set up & Running
 
@@ -45,14 +46,22 @@ winget install ffmpeg
 
 ```
 
-5.  Run app.js or pnpm start:
+5.  Set up MongoDB: copy `.env.example` to `.env` and put your connection string in `MONGODB_URI`. For a local install on Windows:
+
+```bash
+winget install MongoDB.Server
+copy .env.example .env
+
+```
+
+6.  Run app.js or pnpm start:
 
 ```bash
 pnpm start
 
 ```
 
-6.  If run for the first time, a QR code will appear. Scan the QR with a spare WhatsApp account as "Link device". Once is ready, it will display in console "Client ready!
+7.  If run for the first time, a QR code will appear. Scan the QR with a spare WhatsApp account as "Link device". Once is ready, it will display in console "Client ready!
 From there on, it will use local authentication to start.
 
 ## Tips
@@ -81,7 +90,8 @@ sumibot/
 ## Notes
 
 -   Users are identified by their WhatsApp LID (which functions as a unique identifier).
--   Older user files saved under a phone number are moved to the user's LID automatically (when the bot connects, or the next time that user writes). The old file is kept as a backup in datafiles/userdata_migrated.
+-   Users are stored in the `users` collection in MongoDB. Old JSON files in datafiles/userdata are imported on startup and moved to datafiles/userdata_imported.
+-   Users saved under a phone number are moved to the user's LID automatically (when the bot connects, or the next time that user writes). A copy of the old account is kept in the `users_migrated` collection.
 -   As for now, only users with `ADMIN` role may execute certain commands. You may assing a user `ADMIN` role by accesing their user file in datafiles/userdata (if they are registered).
 -   As it name suggests, datafiles/temp is used to save files temporarily while being worked with.
 -   If an image/video is sent to the bot directly by private chat, the bot converts it to sticker automatically

@@ -1,4 +1,4 @@
-import { getUser, editUser } from '../util/user.js';
+import { getUser, addSumicoins } from '../util/user.js';
 import { createPrediction, getPredi, closePrediction, reopenPrediction } from '../util/predictions.js';
 
 const THUMBS_UP = new Set(['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿']);
@@ -52,10 +52,8 @@ async function resolvePrediction({ sock, msg, jid, args, predictToResolve }) {
     const winnersNames = [];
 
     for (const winner of winners) {
-        const userWinner = getUser(winner);
-        winnersNames.push(userWinner.username);
-        userWinner.sumicoins += predictToResolve.sumicoinsPrize;
-        editUser(userWinner.id, userWinner);
+        const userWinner = await addSumicoins(winner, predictToResolve.sumicoinsPrize);
+        if (userWinner) winnersNames.push(userWinner.username);
     }
 
     predictToResolve.resolved = true;
@@ -78,7 +76,7 @@ export default {
     aliases: ['pred', 'p'],
 
     async execute({ sock, msg, args, jid, userId }) {
-        const predAuthor = getUser(userId);
+        const predAuthor = await getUser(userId);
         if (!predAuthor || predAuthor.role !== 'ADMIN') return;
 
         const quotedMsg = msg.message?.extendedTextMessage?.contextInfo;

@@ -11,7 +11,7 @@ subcommands.set('help', async ({ sock, msg, jid }) => {
 });
 
 subcommands.set('balance', async ({ sock, msg, jid, userId }) => {
-    const user = getUser(userId);
+    const user = await getUser(userId);
     if (!user) {
         await sock.sendMessage(jid, { text: 'No estás registrado. Usa *.sumi economy register* para registrarte.' }, { quoted: msg });
         return;
